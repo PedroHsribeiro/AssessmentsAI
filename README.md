@@ -1,36 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Internal AI Questionnaire Platform
 
-## Getting Started
+Plataforma interna para gerenciamento de questionários de clientes com análise por IA.
 
-First, run the development server:
+## 🚀 Tecnologias
+- **Frontend**: Next.js 15 + TypeScript + TailwindCSS + Shadcn/UI
+- **Backend**: Next.js Server Actions + Prisma + SQLite
+- **Auth**: NextAuth.js v5
+- **IA**: OpenAI GPT-4o
+- **Observabilidade**: Datadog
+
+## 📦 Instalação
 
 ```bash
+# Instalar dependências
+npm install
+
+# Configurar banco de dados
+npx prisma migrate dev
+
+# Popular banco com dados iniciais
+npx tsx prisma/seed.ts
+
+# Iniciar servidor de desenvolvimento
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🔐 Credenciais Padrão
+- **Admin**: `admin@example.com` / `admin123`
+- **Comercial**: `commercial@example.com` / `admin123`
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## ⚙️ Configuração
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Crie um arquivo `.env` com:
+```
+DATABASE_URL="file:./dev.db"
+NEXTAUTH_SECRET="changeme"
+NEXTAUTH_URL="http://localhost:3000"
+OPENAI_API_KEY="sua-chave-aqui"
+```
 
-## Learn More
+## 📖 Estrutura
 
-To learn more about Next.js, take a look at the following resources:
+- `/app/commercial` - Ambiente comercial (criar solicitações)
+- `/app/admin` - Ambiente admin (aprovar, gerenciar usuários, configurar IA)
+- `/lib/ai/agent.ts` - Lógica do agente de IA
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🎯 Funcionalidades
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Comercial
+- Dashboard com solicitações
+- Criar nova solicitação (cliente + questionário PDF/DOCX)
+- Visualizar status
 
-## Deploy on Vercel
+### Admin
+- Ver todas as solicitações
+- Aprovar/Rejeitar respostas
+- Gerenciar usuários e papéis
+- Configurar IA (prompt, modelo, base de conhecimento)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🛡️ Segurança
+- Autenticação com bcrypt
+- Validação com Zod
+- Proteção de rotas via middleware
+- Upload seguro de arquivos

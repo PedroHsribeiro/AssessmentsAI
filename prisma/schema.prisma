@@ -1,0 +1,108 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String?
+  roles     UserRole[]
+  requests  Request[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Role {
+  id          String     @id @default(cuid())
+  name        String     @unique
+  permissions String?
+  users       UserRole[]
+}
+
+model UserRole {
+  userId String
+  roleId String
+  user   User @relation(fields: [userId], references: [id])
+  role   Role @relation(fields: [roleId], references: [id])
+
+  @@id([userId, roleId])
+}
+
+model Request {
+  id               String     @id @default(cuid())
+  status           String     @default("PENDING")
+  commercialUserId String
+  commercialUser   User       @relation(fields: [commercialUserId], references: [id])
+  clientName       String
+  documents        Document[]
+  analyses         Analysis[] // Histórico de análises
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+}
+
+model Analysis {
+  id           String   @id @default(cuid())
+  requestId    String
+  providerId   String?  // qual provider foi usado
+  providerName String?  // nome do provider no momento
+  outputZip    String?  // Path to the generated ZIP file
+  status       String   @default("COMPLETED") // COMPLETED, FAILED
+  answers      Answer[]
+  createdAt    DateTime @default(now())
+  request      Request  @relation(fields: [requestId], references: [id])
+}
+
+model Answer {
+  id          String   @id @default(cuid())
+  analysisId  String
+  question    String   @db.Text
+  answer      String   @db.Text
+  evidenceImg String?   // caminho da imagem gerada
+  createdAt   DateTime @default(now())
+  analysis    Analysis @relation(fields: [analysisId], references: [id])
+}
+
+model Document {
+  id        String   @id @default(cuid())
+  requestId String
+  request   Request  @relation(fields: [requestId], references: [id])
+  type      String
+  path      String
+  filename  String
+  createdAt DateTime @default(now())
+}
+
+model KnowledgeBase {
+  id        String   @id @default(cuid())
+  content     String   @db.Text
+  filename    String
+  contentType String   @default("txt") // pdf, docx, txt
+  metadata    String?  @db.Text  // JSON metadata
+  createdAt   DateTime @default(now())
+}
+
+model AIProvider {
+  id           String   @id @default(cuid())
+  name         String   // "OpenAI Production", "Gemini Backup"
+  providerType String   // "openai", "google", "anthropic"
+  apiKey       String   // API key (should be encrypted in production)
+  modelName    String   @default("gpt-4o") // "gpt-4o", "gemini-1.5-pro", "claude-3-sonnet"
+  isActive     Boolean  @default(true)
+  config       String?  @db.Text  // JSON config for additional settings
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model AIConfig {
+  id                String   @id @default(cuid())
+  activeProviderId  String?  // Link to active AIProvider
+  systemPrompt      String   @db.Text
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}

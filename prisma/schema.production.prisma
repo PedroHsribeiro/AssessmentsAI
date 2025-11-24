@@ -1,0 +1,115 @@
+# IMPORTANTE: Use este schema para PRODUÇÃO (Vercel/Neon)
+# Troque o conteúdo do seu schema.prisma por este quando for fazer deploy
+
+datasource db {
+  provider = "postgresql"  # ← Mudou de sqlite para postgresql
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String?
+  role      String   @default("COMMERCIAL")
+  roles     UserRole[]
+  requests  Request[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Role {
+  id          String     @id @default(cuid())
+  name        String     @unique
+  permissions String
+  users       UserRole[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model UserRole {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+  roleId String
+  role   Role   @relation(fields: [roleId], references: [id])
+
+  @@unique([userId, roleId])
+}
+
+model Request {
+  id               String     @id @default(cuid())
+  status           String     @default("PENDING")
+  commercialUserId String
+  commercialUser   User       @relation(fields: [commercialUserId], references: [id])
+  clientName       String
+  documents        Document[]
+  analyses         Analysis[]
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+}
+
+model Analysis {
+  id           String   @id @default(cuid())
+  requestId    String
+  providerId   String?
+  providerName String?
+  outputZip    String?
+  status       String   @default("COMPLETED")
+  answers      Answer[]
+  createdAt    DateTime @default(now())
+  request      Request  @relation(fields: [requestId], references: [id])
+}
+
+model Answer {
+  id          String   @id @default(cuid())
+  analysisId  String
+  question    String   @db.Text  # ← Text para strings longas no PostgreSQL
+  answer      String   @db.Text
+  evidenceImg String?
+  createdAt   DateTime @default(now())
+  analysis    Analysis @relation(fields: [analysisId], references: [id])
+}
+
+model Document {
+  id        String   @id @default(cuid())
+  requestId String
+  request   Request  @relation(fields: [requestId], references: [id])
+  type      String
+  path      String
+  filename  String
+  createdAt DateTime @default(now())
+}
+
+model KnowledgeBase {
+  id          String   @id @default(cuid())
+  content     String   @db.Text
+  filename    String
+  contentType String   @default("txt")
+  metadata    String?  @db.Text
+  createdAt   DateTime @default(now())
+}
+
+model AIProvider {
+  id           String   @id @default(cuid())
+  name         String
+  providerType String
+  apiKey       String
+  modelName    String   @default("gpt-4o")
+  isActive     Boolean  @default(true)
+  config       String?  @db.Text
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model AIConfig {
+  id               String   @id @default(cuid())
+  activeProviderId String?
+  systemPrompt     String   @db.Text
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
